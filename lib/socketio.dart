@@ -1,31 +1,37 @@
 import 'dart:convert';
-import 'package:adhara_socket_io/adhara_socket_io.dart';
+// import 'package:adhara_socket_io/adhara_socket_io.dart';
 // import 'package:socket_io/socket_io.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'Globals.dart' as G;
 
 class SocketUtil {
   dynamic userId;
   IO.Socket socket;
-  static const URI = "http://10.0.2.2:3000/";
-  // List<String> toPrint = ["trying to connect"];
-
-  // Map<String, SocketIO> sockets = {};
-  // Map<String, bool> _isProbablyConnected = {};
+  static const URI = 'http://192.168.248.1:3002/';
   SocketUtil(dynamic id) {
     this.userId = id;
   }
   initSocket() async {
-    socket = IO.io(URI, <String, dynamic>{
-      'transports': ['websocket'],
-    });
+    this.socket =
+        IO.io(URI, IO.OptionBuilder().setTransports(['websocket']).build());
+
     socket.onConnect((_) {
       print('connected');
-      socket.emit("message", [this.userId.toString()]);
+      print(this.userId);
+      socket.emit("token", [this.userId]);
     });
     // socket.on('message', (data) => print(data));
     socket.onReconnectAttempt((_) => print("reconnect attempt"));
     socket.onDisconnect((_) => print('disconnect'));
-    socket.onError((err) => print(err));
+    socket.onError((err) {
+      print("sdasad");
+      print(err);
+    });
+    socket.on("sensor-data-snapshot", (data) {
+      data = json.decode(data);
+      print(data);
+      G.data.add(data[0]);
+    });
     // socket.on('fromServer', (_) => print(_));
     // socket.connect();
   }
@@ -46,63 +52,19 @@ class SocketUtil {
   }
 }
 
-// import 'dart:convert';
-// import 'package:adhara_socket_io/adhara_socket_io.dart';
-
-// class SocketUtil {
-//   // List<String> toPrint = ["trying to connect"];
-
-//   // Map<String, SocketIO> sockets = {};
-//   // Map<String, bool> _isProbablyConnected = {};
-//   static const URI = "http://10.0.2.2:3001/";
-//   SocketIOManager manager = SocketIOManager();
-//   SocketIO socket;
-
-//   initSocket() async {
-//     // setState(() => _isProbablyConnected[identifier] = true);
-//     SocketIO socket = await manager.createInstance(SocketOptions(
-//         //Socket IO server URI
-//         URI,
-//         enableLogging: true,
-//         transports: [
-//           Transports.WEB_SOCKET /*, Transports.POLLING*/
-//         ] //Enable required transport
-//         ));
-//     socket.onConnect((data) {
-//       pprint("connected...");
-//       pprint(data);
+// socket = IO.io(
+//         'http://10.0.2.2:4005',
+//         IO.OptionBuilder()
+//             .setTransports(['websocket'])
+//             .disableAutoConnect()
+//             .build());
+//     socket.onConnect((_) {
+//       print('connect');
 //     });
-//     socket.onConnectError(pprint);
-//     socket.onConnectTimeout(pprint);
-//     socket.onError(pprint);
-//     socket.onDisconnect(pprint);
-//     // socket.on("type:string", (data) => pprint("type:string | $data"));
-//     // socket.on("type:bool", (data) => pprint("type:bool | $data"));
-//     // socket.on("type:number", (data) => pprint("type:number | $data"));
-//     // socket.on("type:object", (data) => pprint("type:object | $data"));
-//     // socket.on("type:list", (data) => pprint("type:list | $data"));
-//     // socket.on("message", (data) => pprint(data));
+//     socket.onDisconnect((_) => print('disconnect'));
+//     socket.on('greet', (data) {
+//       print("server says" + data);
+//       socket.emit('msg', "HELLO");
+//     });
 //     socket.connect();
-//     this.socket = socket;
 //   }
-
-//   disconnect() async {
-//     await manager.clearInstance(socket);
-//     // setState(() => _isProbablyConnected[identifier] = false);
-//   }
-
-//   sendMessage(String messageType, String message) {
-//     if (socket != null) {
-//       // pprint("sending message from '$'...");
-//       this.socket.emit(messageType, [message]);
-//       // pprint("Message emitted from '$identifier'...");
-//     }
-//   }
-
-//   pprint(data) {
-//     if (data is Map) {
-//       data = json.encode(data);
-//     }
-//     print(data);
-//   }
-// }

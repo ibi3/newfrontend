@@ -1,11 +1,20 @@
 // import 'dart:js';
 
-import 'package:flutter/material.dart';
-import 'package:web_socket/socketio.dart';
+import 'dart:async';
+
+// import 'package:flutter/material.dart';
+
 // import 'package:web_socket/socketio.dart';
 
-SocketUtil socketUtil;
+// /home/ibrahim/Desktop/coding/Flutter/learn/sproj_final/front end museebat/
 
-Map<String, dynamic> globalMap;
+// import 'package:web_socket/socketio.dart';
+
+import 'package:web_socket/socketio.dart';
+
+// Map<String, dynamic> globalMap;
+StreamController<Map<String, dynamic>> data;
+
+SocketUtil socketUtil;
 
 var userUsageLimit = 2000.0;

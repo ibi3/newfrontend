@@ -15,15 +15,16 @@ class ComponentPowerUsage {
 class FiveDaysPowerUsage {
   final double powerUsage;
   final String date;
+
   final charts.Color barColor =
       charts.ColorUtil.fromDartColor(Colors.greenAccent);
 
   FiveDaysPowerUsage({@required this.powerUsage, @required this.date});
 }
 
-Widget TrendsScreenWidget() {
+Widget TrendsScreenWidget(Map overAllData) {
   // bool dataLoading = true;
-  List datacomponentPowerUsage = roomBarSeries(G.globalMap);
+  List datacomponentPowerUsage = roomBarSeries(overAllData);
   List<List> dataFiveDaysPowerUsage = [
     [200.0, "21/11/2019"],
     [300.0, "22/11/2019"],

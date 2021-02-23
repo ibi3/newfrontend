@@ -49,7 +49,7 @@ class SignupForm extends StatefulWidget {
 class _SignupFormState extends State<SignupForm> {
   final _formKey = GlobalKey<FormState>();
 
-  String email, password;
+  String username, password;
 
   bool signupInProgress = false;
 
@@ -62,12 +62,12 @@ class _SignupFormState extends State<SignupForm> {
           Container(
             padding: EdgeInsets.all(10.0),
             child: TextFormField(
-              onChanged: (text) => email = text,
+              onChanged: (text) => username = text,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.email),
                 filled: true,
                 fillColor: Colors.white,
-                hintText: 'Email',
+                hintText: 'Username',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(17.0),
                 ),
@@ -104,7 +104,7 @@ class _SignupFormState extends State<SignupForm> {
                         setState(() {
                           signupInProgress = true;
                         });
-                        var result = await signup(email, password);
+                        var result = await signup(username, password);
                         if (result == false) {
                           final snackbar =
                               SnackBar(content: Text('Incorrect credentials'));
@@ -113,6 +113,9 @@ class _SignupFormState extends State<SignupForm> {
                           final snackbar =
                               SnackBar(content: Text('Logged in!'));
                           Scaffold.of(context).showSnackBar(snackbar);
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) => LoginScreen()));
                         }
                       } catch (error) {
                         final snackbar =
@@ -158,24 +161,23 @@ class _SignupFormState extends State<SignupForm> {
   }
 }
 
-final String apiUrl = 'https://damp-scrubland-66596.herokuapp.com/api/';
+final String apiUrl = 'http://192.168.248.1:3000/users/';
 
-dynamic signup(email, password) async {
+dynamic signup(username, password) async {
   final http.Response response = await http.post(
-    apiUrl + 'user/register/',
+    apiUrl,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, String>{
-      'email': email,
+      'username': username,
       'password': password,
     }),
   );
-
-  Map<String, dynamic> body = jsonDecode(response.body);
-
-  if (body.containsKey('data')) {
-    return body['data'];
+  print(response.statusCode);
+  print(response.body);
+  if (response.statusCode == 201) {
+    return true;
   } else {
     return false;
   }

@@ -1,10 +1,14 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:web_socket/homeScreen.dart';
 import 'dart:convert';
 import 'dart:core';
-
+import '../Globals.dart' as G;
 import 'package:web_socket/screens/signup.dart';
+
+import '../socketio.dart';
 
 class LoginScreen extends StatelessWidget {
   @override
@@ -66,7 +70,7 @@ class _LoginFormState extends State<LoginForm> {
                 prefixIcon: Icon(Icons.email),
                 filled: true,
                 fillColor: Colors.white,
-                hintText: 'Email',
+                hintText: 'Username',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(17.0),
                 ),
@@ -104,16 +108,21 @@ class _LoginFormState extends State<LoginForm> {
                           loginInProgress = true;
                         });
                         var result = await login(email, password);
+                        // print(result);
                         if (result == false) {
                           final snackbar =
                               SnackBar(content: Text('Incorrect credentials'));
                           Scaffold.of(context).showSnackBar(snackbar);
                         } else {
-                          final snackbar =
-                              SnackBar(content: Text('Logged in!'));
-                          Scaffold.of(context).showSnackBar(snackbar);
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) => HomeScreen()));
+                          // final snackbar =
+                          //     SnackBar(content: Text('Logged in!'));
+                          // Scaffold.of(context).showSnackBar(snackbar);
                         }
                       } catch (error) {
+                        print(error);
                         final snackbar =
                             SnackBar(content: Text('An error occured'));
                         Scaffold.of(context).showSnackBar(snackbar);
@@ -157,25 +166,33 @@ class _LoginFormState extends State<LoginForm> {
   }
 }
 
-final String apiUrl = 'https://damp-scrubland-66596.herokuapp.com/api/';
+final String apiUrl = 'http://192.168.248.1:3001/login';
 
-dynamic login(email, password) async {
+dynamic login(username, password) async {
   final http.Response response = await http.post(
-    apiUrl + 'user/login/',
+    apiUrl,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, String>{
-      'email': email,
+      'username': username,
       'password': password,
     }),
   );
 
-  Map<String, dynamic> body = jsonDecode(response.body);
-
-  if (body.containsKey('data')) {
-    return body['data'];
+  if (response.statusCode == 200) {
+    Map<String, dynamic> body = jsonDecode(response.body);
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    pref.setString("accessToken", body['accessToken']);
+    pref.setString("refreshToken", body['refreshToken']);
+    var socketUtil = SocketUtil(body['accessToken']);
+    G.socketUtil = socketUtil;
+    await G.socketUtil.initSocket();
   } else {
     return false;
   }
+
+  // if (body.containsKey('data')) {
+  //   return body['data'];
+  // }
 }
