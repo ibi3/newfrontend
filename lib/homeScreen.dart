@@ -1,6 +1,7 @@
 // import 'package:web_socket/bottomnavigationbarwidget.dart';
 import 'package:web_socket/changeUsageLImitWidget.dart';
 import 'package:web_socket/homeScreenWidget.dart';
+import 'package:web_socket/socketio.dart';
 import 'package:web_socket/trendsScreenWidget.dart';
 // import 'getRoomsWidget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,7 +28,7 @@ class PrHomeScreen extends State<HomeScreen> {
   Map<String, double> unitsInfo;
   Map<String, double> billInfo;
   List<Widget> _children;
-
+  Stream<Map> overAllDataStream;
   double estimatedBill(var unitsUsed) {
     return unitsUsed * 18.90;
   }
@@ -37,6 +38,7 @@ class PrHomeScreen extends State<HomeScreen> {
     super.initState();
     // this.currentElectricityUsage = double.parse(G.globalMap["Usage_kW"]);
     // this.electricityUsed += this.currentElectricityUsage;
+    this.overAllDataStream = G.socketUtil.getStream;
     getData();
   }
 
@@ -56,7 +58,7 @@ class PrHomeScreen extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // if (G.globalMap != null) {
     return StreamBuilder(
-      stream: G.data.stream,
+      stream: overAllDataStream,
       builder: (BuildContext context, snapshot) {
         if (!snapshot.hasData) {
           return Scaffold(
@@ -109,21 +111,6 @@ class PrHomeScreen extends State<HomeScreen> {
             onTap: navbarTapped,
           ), // This trailing comma makes auto-formatting nicer for build methods.
         );
-        // } else {
-        //   return Scaffold(
-        //     backgroundColor: Colors.black,
-        //     body: Center(
-        //       child: Text(
-        //         "No data available",
-        //         style: TextStyle(
-        //           color: Colors.white,
-        //           fontWeight: FontWeight.bold,
-        //         ),
-        //         textAlign: TextAlign.center,
-        //       ),
-        //     ),
-        //   );
-        // }
       },
     );
   }

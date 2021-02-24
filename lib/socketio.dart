@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 // import 'package:adhara_socket_io/adhara_socket_io.dart';
 // import 'package:socket_io/socket_io.dart';
@@ -5,12 +6,16 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'Globals.dart' as G;
 
 class SocketUtil {
+  StreamController<Map<String, dynamic>> _usageData;
   dynamic userId;
   IO.Socket socket;
   static const URI = 'http://192.168.248.1:3002/';
   SocketUtil(dynamic id) {
     this.userId = id;
   }
+
+  Stream<Map> get getStream => _usageData.stream;
+
   initSocket() async {
     this.socket =
         IO.io(URI, IO.OptionBuilder().setTransports(['websocket']).build());
@@ -30,7 +35,7 @@ class SocketUtil {
     socket.on("sensor-data-snapshot", (data) {
       data = json.decode(data);
       print(data);
-      G.data.add(data[0]);
+      _usageData.sink.add(data[0]);
     });
     // socket.on('fromServer', (_) => print(_));
     // socket.connect();

@@ -161,7 +161,7 @@ class _SignupFormState extends State<SignupForm> {
   }
 }
 
-final String apiUrl = 'http://192.168.248.1:3000/users/';
+final String apiUrl = 'http://192.168.57.184:3000/users/';
 
 dynamic signup(username, password) async {
   final http.Response response = await http.post(

@@ -13,7 +13,6 @@ import 'dart:async';
 import 'package:web_socket/socketio.dart';
 
 // Map<String, dynamic> globalMap;
-StreamController<Map<String, dynamic>> data;
 
 SocketUtil socketUtil;
 

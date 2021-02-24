@@ -65,17 +65,6 @@ class _ChangeLimitScreen extends State<ChangeLimitScreen> {
       padding: EdgeInsets.all(10),
       child: ListView(
         children: <Widget>[
-          // Container(
-          // alignment: Alignment.center,
-          // padding: EdgeInsets.all(10),
-          // child: Text(
-          //   "",
-          //   textAlign: TextAlign.center,
-          //   style: TextStyle(
-          //       color: Colors.blue,
-          //       fontWeight: FontWeight.w500,
-          //       fontSize: 22),
-          // )),
           Container(
               alignment: Alignment.center,
               padding: EdgeInsets.all(10),
@@ -83,7 +72,6 @@ class _ChangeLimitScreen extends State<ChangeLimitScreen> {
                 'Monthly Usage Limit',
                 style: TextStyle(fontSize: 20, color: Colors.white),
               )),
-
           Form(
             key: _formKey,
             child: Column(
