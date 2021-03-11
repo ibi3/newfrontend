@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:web_socket/screens/login.dart';
 import 'dart:convert';
 import 'dart:core';
-
-import 'package:web_socket/signup.dart';
+import 'package:web_socket/Globals.dart' as G;
 
 class SignupScreen extends StatelessWidget {
   @override
@@ -49,7 +48,7 @@ class SignupForm extends StatefulWidget {
 class _SignupFormState extends State<SignupForm> {
   final _formKey = GlobalKey<FormState>();
 
-  String username, password;
+  String email, password;
 
   bool signupInProgress = false;
 
@@ -62,12 +61,12 @@ class _SignupFormState extends State<SignupForm> {
           Container(
             padding: EdgeInsets.all(10.0),
             child: TextFormField(
-              onChanged: (text) => username = text,
+              onChanged: (text) => email = text,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.email),
                 filled: true,
                 fillColor: Colors.white,
-                hintText: 'Username',
+                hintText: 'Email',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(17.0),
                 ),
@@ -104,15 +103,15 @@ class _SignupFormState extends State<SignupForm> {
                         setState(() {
                           signupInProgress = true;
                         });
-                        var result = await signup(username, password);
-                        if (result == false) {
-                          final snackbar =
-                              SnackBar(content: Text('Incorrect credentials'));
+                        var result = await signup(email, password);
+                        if (result != 'account_created') {
+                          final snackbar = SnackBar(content: Text(result));
                           Scaffold.of(context).showSnackBar(snackbar);
                         } else {
                           final snackbar =
-                              SnackBar(content: Text('Logged in!'));
+                              SnackBar(content: Text('Account Created!'));
                           Scaffold.of(context).showSnackBar(snackbar);
+                          new Duration(hours: 0, minutes: 0, seconds: 1);
                           Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
                                   builder: (context) => LoginScreen()));
@@ -161,24 +160,25 @@ class _SignupFormState extends State<SignupForm> {
   }
 }
 
-final String apiUrl = 'http://192.168.57.184:3000/users/';
+final String apiUrl = G.ip + ':' + G.signupPort + '/register';
 
-dynamic signup(username, password) async {
+dynamic signup(email, password) async {
   final http.Response response = await http.post(
     apiUrl,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, String>{
-      'username': username,
+      'email': email,
       'password': password,
     }),
   );
-  print(response.statusCode);
-  print(response.body);
-  if (response.statusCode == 201) {
-    return true;
+  final Map responseMap = json.decode(response.body);
+  if (responseMap.containsKey('error')) {
+    return responseMap['error'];
   } else {
-    return false;
+    return 'account_created';
   }
+  // print(response.statusCode);
+  // print(response.body);
 }

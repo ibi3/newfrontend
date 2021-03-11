@@ -109,9 +109,8 @@ class _LoginFormState extends State<LoginForm> {
                         });
                         var result = await login(email, password);
                         // print(result);
-                        if (result == false) {
-                          final snackbar =
-                              SnackBar(content: Text('Incorrect credentials'));
+                        if (result != 'logged in') {
+                          final snackbar = SnackBar(content: Text(result));
                           Scaffold.of(context).showSnackBar(snackbar);
                         } else {
                           Navigator.of(context).pushReplacement(
@@ -166,31 +165,45 @@ class _LoginFormState extends State<LoginForm> {
   }
 }
 
-final String apiUrl = 'http://192.168.248.1:3001/login';
+final String apiUrl = G.ip + ':' + G.loginPort + '/login';
 
-dynamic login(username, password) async {
+dynamic login(email, password) async {
   final http.Response response = await http.post(
     apiUrl,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, String>{
-      'username': username,
+      'email': email,
       'password': password,
     }),
   );
+  // print(response.body);
+  final Map responseMap = json.decode(response.body);
+  if (responseMap.containsKey('error')) {
+    return responseMap['error'];
+  } else {
+    var accessToken = responseMap['data'];
 
-  if (response.statusCode == 200) {
-    Map<String, dynamic> body = jsonDecode(response.body);
     SharedPreferences pref = await SharedPreferences.getInstance();
-    pref.setString("accessToken", body['accessToken']);
-    pref.setString("refreshToken", body['refreshToken']);
-    var socketUtil = SocketUtil(body['accessToken']);
+    pref.setString("accessToken", accessToken);
+
+    var socketUtil = SocketUtil(accessToken);
     G.socketUtil = socketUtil;
     await G.socketUtil.initSocket();
-  } else {
-    return false;
+    return 'logged in';
   }
+  // if (response.statusCode = 200) {
+  //   Map<String, dynamic> body = jsonDecode(response.body);
+  //   SharedPreferences pref = await SharedPreferences.getInstance();
+  //   pref.setString("accessToken", body['accessToken']);
+  //   pref.setString("refreshToken", body['refreshToken']);
+  //   var socketUtil = SocketUtil(body['accessToken']);
+  //   G.socketUtil = socketUtil;
+  //   await G.socketUtil.initSocket();
+  // } else {
+  //   return false;
+  // }
 
   // if (body.containsKey('data')) {
   //   return body['data'];

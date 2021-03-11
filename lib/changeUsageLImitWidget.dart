@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket/homeScreen.dart';
-// import 'package:web_socket/homeScreen.dart';
 import 'Globals.dart' as G;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -19,7 +18,6 @@ class _ChangeLimitScreen extends State<ChangeLimitScreen> {
   bool editSettings = false;
   bool settingsedited = false;
   final _formKey = GlobalKey<FormState>();
-
   TextEditingController usageController = TextEditingController();
 
   @override
@@ -27,34 +25,39 @@ class _ChangeLimitScreen extends State<ChangeLimitScreen> {
     // TODO: implement initState
     super.initState();
 
-    usageController.text = G.userUsageLimit.toString();
+    usageController.text = widget.usageLimit.toString();
   }
 
-  Future<void> changeUsageLimit() async {
+  Future<String> changeUsageLimit() async {
     final bool x = _formKey.currentState.validate();
     if (x) {
       SharedPreferences pref = await SharedPreferences.getInstance();
-      var userID = pref.getString('userid');
+      var token = pref.getString('accessToken');
       try {
-        var result = await http.post('http://10.0.2.2:3000/limit',
-            body: {'userid': userID, 'limit': usageController.text});
+        print(usageController.text);
+        var result = await http.put(
+            G.ip + ":" + G.restAPIPort + '/api/usage/limit',
+            headers: {
+              'authorization': token,
+              'Content-Type': 'application/json; charset=UTF-8'
+            },
+            body: jsonEncode({'usageLimit': usageController.text}));
 
-        var response = json.decode(result.body);
-        if (response['error'] == true) {
-          print("error");
+        Map response = json.decode(result.body);
+        if (response.containsKey('error')) {
+          return response['error'];
         } else {
-          pref.setString('limit', G.userUsageLimit.toString());
-          G.userUsageLimit = double.parse(usageController.text);
           this.setState(() {
             this.editSettings = false;
             this.settingsedited = true;
           });
           widget.parentClass.setState(() {
-            widget.parentClass.usageLimit = G.userUsageLimit;
+            widget.parentClass.usageLimit = double.parse(usageController.text);
           });
+          return response['data'];
         }
       } catch (e) {
-        print(e);
+        return e.toString();
       }
     }
   }
@@ -117,13 +120,17 @@ class _ChangeLimitScreen extends State<ChangeLimitScreen> {
                     height: 50,
                     padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
                     child: RaisedButton(
-                      color: editSettings ? Colors.greenAccent : Colors.grey,
-                      textColor: editSettings ? Colors.white : Colors.blueGrey,
-                      // color: Colors.blue,
-                      child: Text('Update'),
-
-                      onPressed: changeUsageLimit,
-                    )),
+                        color: editSettings ? Colors.greenAccent : Colors.grey,
+                        textColor:
+                            editSettings ? Colors.white : Colors.blueGrey,
+                        // color: Colors.blue,
+                        child: Text('Update'),
+                        onPressed: () async {
+                          String limitUpdateResponse = await changeUsageLimit();
+                          final snackbar =
+                              SnackBar(content: Text(limitUpdateResponse));
+                          Scaffold.of(context).showSnackBar(snackbar);
+                        })),
               ],
             ),
           ),

@@ -1,21 +1,38 @@
 import 'package:flutter/material.dart';
 // import 'package:web_socket/homeScreen.dart';
-import 'Globals.dart' as G;
 
 import 'getRoomsWidget.dart';
 
-class HomeScreenWidget extends StatefulWidget {
-  final Map<String, dynamic> overAllData;
-  final BuildContext context;
-  HomeScreenWidget({Key key, this.overAllData, this.context}) : super(key: key);
-  @override
-  _HomeScreenWidget createState() => _HomeScreenWidget();
-}
+// class HomeScreenWidget extends StatefulWidget {
 
-class _HomeScreenWidget extends State<HomeScreenWidget> {
-  double percentUsed = 0.7;
+//   HomeScreenWidget(
+//       {Key key,
+//       this.overAllData,
+//       this.context,
+//       this.monthUsage,
+//       this.usageLimit})
+//       : super(key: key);
+//   @override
+//   _HomeScreenWidget createState() => _HomeScreenWidget();
+// }
+
+class HomeScreenWidget extends StatelessWidget {
+  final Map<String, dynamic> overAllData;
+  final BuildContext parentContext;
+  final double monthUsage;
+  final double usageLimit;
+  HomeScreenWidget(
+      {Key key,
+      this.overAllData,
+      this.parentContext,
+      this.monthUsage,
+      this.usageLimit})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
+    // print(this.monthUsage);
+    // print(this.usageLimit);
+    double percentUsed = this.monthUsage / this.usageLimit;
     return ListView(
       // mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -34,9 +51,7 @@ class _HomeScreenWidget extends State<HomeScreenWidget> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Usage: ' +
-                        widget.overAllData["Usage_kW"].toStringAsFixed(3) +
-                        " KWH",
+                    'Usage: ' + this.overAllData["Usage_kW"] + " KWH",
                     style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
@@ -46,22 +61,22 @@ class _HomeScreenWidget extends State<HomeScreenWidget> {
               ),
               Container(
                 padding: EdgeInsets.zero,
-                width: MediaQuery.of(widget.context).size.width * 0.4,
-                height: MediaQuery.of(widget.context).size.height * 0.5,
+                width: MediaQuery.of(this.parentContext).size.width * 0.4,
+                height: MediaQuery.of(this.parentContext).size.height * 0.5,
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                 ),
                 child: Center(
                   child: Container(
-                    width: MediaQuery.of(widget.context).size.width * 0.07,
-                    height: MediaQuery.of(widget.context).size.height * 0.4,
+                    width: MediaQuery.of(this.parentContext).size.width * 0.07,
+                    height: MediaQuery.of(this.parentContext).size.height * 0.4,
                     child: ClipRRect(
                       borderRadius: BorderRadius.all(Radius.circular(20)),
                       child: RotatedBox(
                         quarterTurns: 3,
                         child: LinearProgressIndicator(
                           minHeight: 20,
-                          value: this.percentUsed,
+                          value: percentUsed,
                           valueColor: AlwaysStoppedAnimation(
                             percentUsed >= 1.0
                                 ? Colors.redAccent
@@ -81,7 +96,7 @@ class _HomeScreenWidget extends State<HomeScreenWidget> {
           padding: EdgeInsets.zero,
           decoration: BoxDecoration(color: Colors.white),
           child: Column(
-            children: roomsList(widget.overAllData, widget.context),
+            children: roomsList(this.overAllData, this.parentContext),
           ),
         ),
       ],

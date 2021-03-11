@@ -1,3 +1,5 @@
+// import 'dart:js_util';
+
 import 'package:flutter/material.dart';
 
 String getRoomName(String shortName) {
@@ -73,7 +75,7 @@ List getEachBar(String name, double usage, {String component = ""}) {
 
 List<Widget> roomsList(Map usage, BuildContext context) {
   final children = <Widget>[];
-  print(usage);
+  // print(usage);
   // print(usage);
   double totalUsage = double.parse(usage['Usage_kW']);
   usage.forEach((key, value) {
@@ -103,6 +105,8 @@ List roomBarSeries(Map usage) {
     List a = key.split('_');
     if (a[0] == "Usage" || a[0] == "Date" || key == '_id') {
     } else if (a.length > 2) {
+      // print(value);
+      // print(value.runtimeType);
       if (double.parse(value) < 0.0001) {
       } else {
         children.add(getEachBar(a[1], double.parse(value), component: a[0]));

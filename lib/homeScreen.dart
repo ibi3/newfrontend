@@ -1,13 +1,11 @@
-// import 'package:web_socket/bottomnavigationbarwidget.dart';
+import 'dart:convert';
 import 'package:web_socket/changeUsageLImitWidget.dart';
 import 'package:web_socket/homeScreenWidget.dart';
-import 'package:web_socket/socketio.dart';
 import 'package:web_socket/trendsScreenWidget.dart';
-// import 'getRoomsWidget.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Globals.dart' as G;
 import 'package:flutter/material.dart';
-// import 'package:charts_flutter/flutter.dart' as charts;
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key key, this.title}) : super(key: key);
@@ -19,25 +17,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class PrHomeScreen extends State<HomeScreen> {
-  // var currentElectricityUsage = 0.0;
-  // var electricityUsed = 0.0;
-  // var percentElectricityUsed = 0.0;
-  var usageLimit = 0.0;
+  double monthUsage = 0;
+  double usageLimit = 0;
+  bool gettingData = true;
   var _selectedIndex = 0;
   bool buttonPressed = false;
   Map<String, double> unitsInfo;
   Map<String, double> billInfo;
   List<Widget> _children;
   Stream<Map> overAllDataStream;
-  double estimatedBill(var unitsUsed) {
-    return unitsUsed * 18.90;
-  }
 
   @override
   void initState() {
     super.initState();
-    // this.currentElectricityUsage = double.parse(G.globalMap["Usage_kW"]);
-    // this.electricityUsed += this.currentElectricityUsage;
     this.overAllDataStream = G.socketUtil.getStream;
     getData();
   }
@@ -50,13 +42,50 @@ class PrHomeScreen extends State<HomeScreen> {
 
   Future<void> getData() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    var usageLimit = pref.getString('usageLimit');
-    this.usageLimit = double.parse(usageLimit);
+    String token = pref.getString("accessToken");
+    try {
+      final http.Response usageResponse = await http.get(
+          G.ip + ":" + G.restAPIPort + "/api/usage/limit",
+          headers: {"authorization": token});
+      Map userUsageLimit = json.decode(usageResponse.body);
+
+      if (userUsageLimit.containsKey('error')) {
+        this.usageLimit = 3000;
+      } else {
+        // print(userUsageLimit['data'].runtimeType);
+        this.usageLimit = userUsageLimit['data'].toDouble();
+        // print("Dsadsa");
+      }
+    } catch (e) {
+      print(e);
+    }
+
+    try {
+      final http.Response monthlyUsageResponse = await http.get(
+          G.ip + ":" + G.restAPIPort + "/api/usage/monthly",
+          headers: {"authorization": token});
+      Map userMonthlyUsage = json.decode(monthlyUsageResponse.body);
+      if (!userMonthlyUsage.containsKey('error')) {
+        this.monthUsage = userMonthlyUsage['data'];
+      }
+    } catch (e) {
+      print(e);
+    }
+
+    this.setState(() {
+      this.gettingData = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // if (G.globalMap != null) {
+    if (this.gettingData) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     return StreamBuilder(
       stream: overAllDataStream,
       builder: (BuildContext context, snapshot) {
@@ -67,9 +96,16 @@ class PrHomeScreen extends State<HomeScreen> {
             ),
           );
         }
+        this.monthUsage += double.parse(snapshot.data['reading']['Usage_kW']);
+        // String s= "DSasad";
+        // s.split()
         _children = [
-          HomeScreenWidget(overAllData: snapshot.data, context: this.context),
-          TrendsScreenWidget(snapshot.data),
+          HomeScreenWidget(
+              overAllData: snapshot.data['reading'],
+              parentContext: this.context,
+              monthUsage: this.monthUsage,
+              usageLimit: this.usageLimit),
+          TrendsScreenWidget(snapshot.data['reading'], this.monthUsage),
           ChangeLimitScreen(
             parentClass: this,
             usageLimit: this.usageLimit,

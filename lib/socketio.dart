@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-// import 'package:adhara_socket_io/adhara_socket_io.dart';
-// import 'package:socket_io/socket_io.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'Globals.dart' as G;
 
 class SocketUtil {
-  StreamController<Map<String, dynamic>> _usageData;
+  final _usageData = StreamController<Map<String, dynamic>>();
   dynamic userId;
   IO.Socket socket;
-  static const URI = 'http://192.168.248.1:3002/';
+  static const URI = G.ip + ":" + G.streamPort;
   SocketUtil(dynamic id) {
     this.userId = id;
   }
@@ -17,35 +15,36 @@ class SocketUtil {
   Stream<Map> get getStream => _usageData.stream;
 
   initSocket() async {
-    this.socket =
-        IO.io(URI, IO.OptionBuilder().setTransports(['websocket']).build());
+    this.socket = IO.io(
+        URI,
+        IO.OptionBuilder().setTransports(['websocket']).setExtraHeaders(
+            {'token': this.userId}).build());
 
     socket.onConnect((_) {
       print('connected');
-      print(this.userId);
-      socket.emit("token", [this.userId]);
+      // print(this.userId);
+      // socket.emit("token", [this.userId]);
     });
     // socket.on('message', (data) => print(data));
     socket.onReconnectAttempt((_) => print("reconnect attempt"));
-    socket.onDisconnect((_) => print('disconnect'));
+    socket.onDisconnect((_) {
+      print('disconnect');
+      _usageData.close();
+    });
     socket.onError((err) {
-      print("sdasad");
+      // print("sdasad");
       print(err);
     });
-    socket.on("sensor-data-snapshot", (data) {
-      data = json.decode(data);
-      print(data);
-      _usageData.sink.add(data[0]);
+    socket.on("sensor-data-snapshot", (incomingData) {
+      // print(incomingData);
+      var incomingDataMap = json.decode(incomingData);
+      _usageData.sink.add(incomingDataMap);
     });
-    // socket.on('fromServer', (_) => print(_));
-    // socket.connect();
   }
 
   sendMessage(String messageType, String message) {
     if (socket != null) {
-      // pprint("sending message from '$'...");
       this.socket.emit(messageType, [message]);
-      // pprint("Message emitted from '$identifier'...");
     }
   }
 
@@ -56,20 +55,3 @@ class SocketUtil {
     print(data);
   }
 }
-
-// socket = IO.io(
-//         'http://10.0.2.2:4005',
-//         IO.OptionBuilder()
-//             .setTransports(['websocket'])
-//             .disableAutoConnect()
-//             .build());
-//     socket.onConnect((_) {
-//       print('connect');
-//     });
-//     socket.onDisconnect((_) => print('disconnect'));
-//     socket.on('greet', (data) {
-//       print("server says" + data);
-//       socket.emit('msg', "HELLO");
-//     });
-//     socket.connect();
-//   }
